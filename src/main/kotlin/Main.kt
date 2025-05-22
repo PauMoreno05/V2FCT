@@ -1,16 +1,37 @@
-package org.example
+import controller.EmpleadoController
+import controller.FichajeController
+import view.LoginView
+import javax.swing.SwingUtilities
+import javax.swing.UIManager
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+/**
+ * Clase principal que inicia la aplicación
+ */
 fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+    try {
+        // Intentar establecer el look and feel del sistema
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+    // Inicializar controladores
+    val empleadoController = EmpleadoController()
+    val fichajeController = FichajeController()
+
+    // Iniciar la aplicación en el hilo de eventos de Swing
+    SwingUtilities.invokeLater {
+        try {
+            // Verificar la conexión a la base de datos
+            val empleados = empleadoController.getAllEmpleados()
+            println("Conexión exitosa. ${empleados.size} empleados encontrados.")
+
+            // Mostrar la ventana de login
+            val loginView = LoginView(empleadoController)
+            loginView.isVisible = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error al iniciar la aplicación: ${e.message}")
+        }
     }
 }
