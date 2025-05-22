@@ -27,7 +27,7 @@ data class Empleados(
 )
 
 @Serializable
-data class Ficahjes(
+data class Fichajes(
     val ID_Fichaje: Int,
     val DNI_Empleado: String,
     val Fecha: String,
