@@ -23,7 +23,7 @@ data class Empleados(
     val Correo_Empleado: String,
     var ID_Departamento: Int,
     var Telefono_Empleado: String,
-    var Contrasesña: String,
+    var Contraseña: String,
 )
 
 @Serializable
