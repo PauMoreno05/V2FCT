@@ -15,10 +15,6 @@ val supabase = createSupabaseClient(
 }
 
 
-/**
- * Clase principal que inicia la aplicación
- */
-
 @Serializable
 data class Empleados(
     val DNI_Empleado: String,
