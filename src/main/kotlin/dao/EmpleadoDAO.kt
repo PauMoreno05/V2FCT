@@ -29,7 +29,7 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado") ?: "",
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña_Empleado") ?: "" // Nuevo campo
+                    contraseña = resultSet.getString("Contraseña") ?: "" // Nuevo campo
                 )
                 empleados.add(empleado)
             }
@@ -69,7 +69,7 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado"),
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña_Empleado")
+                    contraseña = resultSet.getString("Contraseña")
                 )
             }
 
@@ -106,7 +106,7 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado"),
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña_Empleado")
+                    contraseña = resultSet.getString("Contraseña")
                 )
                 empleados.add(empleado)
             }
@@ -139,7 +139,7 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado"),
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña_Empleado")
+                    contraseña = resultSet.getString("Contraseña")
                 )
             }
 
@@ -164,7 +164,7 @@ class EmpleadoDAO {
             val query = """
                 INSERT INTO Empleados (
                     DNI_Empleado, Nombre_Empleado, Apellido_Empleado, 
-                    Correo_Empleado, ID_Departamento, Telefono_Empleado, Contraseña_Empleado
+                    Correo_Empleado, ID_Departamento, Telefono_Empleado, Contraseña
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             val preparedStatement = connection.prepareStatement(query)
@@ -203,7 +203,7 @@ class EmpleadoDAO {
                     Correo_Empleado = ?, 
                     ID_Departamento = ?, 
                     Telefono_Empleado = ?,
-                    Contraseña_Empleado = ?
+                    Contraseña = ?
                 WHERE DNI_Empleado = ?
             """
             val preparedStatement = connection.prepareStatement(query)
