@@ -162,6 +162,9 @@ class FichajeDAO {
      */
     fun registrarEntrada(dniEmpleado: String): Int {
         val connection = DBConnection.connect()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val timeFormat = SimpleDateFormat("HH:mm")
+
         val currentDate = dateFormat.format(Date())
         val currentTime = timeFormat.format(Date())
 
@@ -220,6 +223,9 @@ class FichajeDAO {
      */
     fun registrarSalida(dniEmpleado: String): Boolean {
         val connection = DBConnection.connect()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val timeFormat = SimpleDateFormat("HH:mm")
+
         val currentDate = dateFormat.format(Date())
         val currentTime = timeFormat.format(Date())
 

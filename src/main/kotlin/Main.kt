@@ -7,6 +7,40 @@ import view.LoginView
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
 
+val supabase = createSupabaseClient(
+    supabaseUrl = "https://ibrusfgcyblkfzcttujk.supabase.co",
+    supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlicnVzZmdjeWJsa2Z6Y3R0dWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4MTk3NzgsImV4cCI6MjA2MzM5NTc3OH0.IIaLAF3OcMHz9mO7g7VYpoBHie92-7oWu8j1CgFCF3A"
+) {
+    install(Postgrest)
+}
+
+
+@Serializable
+data class Empleados(
+    val DNI_Empleado: String,
+    val Nombre_Empleado: String,
+    val Apellido_Empleado: String,
+    val Correo_Empleado: String,
+    var ID_Departamento: Int,
+    var Telefono_Empleado: String,
+    var Contraseña: String,
+)
+
+@Serializable
+data class Fichajes(
+    val ID_Fichaje: Int,
+    val DNI_Empleado: String,
+    val Fecha: String,
+    val Hora_Entrada: String,
+    var Hora_Salida: String,
+)
+
+@Serializable
+data class Departamentos(
+    val ID_Departamento: Int,
+    val Nombre_Departamento: String,
+)
+
 
 fun main() {
     try {
