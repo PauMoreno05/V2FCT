@@ -27,7 +27,7 @@ class FichajeDAO {
 
         try {
             val statement = connection.createStatement()
-            val resultSet = statement.executeQuery("SELECT * FROM Fichajes")
+            val resultSet = statement.executeQuery("""SELECT * FROM "Fichajes"""")
 
             while (resultSet.next()) {
                 val fichaje = Fichaje(
@@ -58,7 +58,7 @@ class FichajeDAO {
         val connection = DBConnection.connect()
 
         try {
-            val query = "SELECT * FROM Fichajes WHERE ID_Fichaje = ?"
+            val query = """SELECT * FROM "Fichajes" WHERE "ID_Fichaje" = ?"""
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setInt(1, id)
 
@@ -93,7 +93,7 @@ class FichajeDAO {
         val connection = DBConnection.connect()
 
         try {
-            val query = "SELECT * FROM Fichajes WHERE DNI_Empleado = ? ORDER BY Fecha DESC, Hora_Entrada DESC"
+            val query = """SELECT * FROM "Fichajes" WHERE "DNI_Empleado" = ? ORDER BY "Fecha" DESC, "Hora_Entrada" DESC"""
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, dniEmpleado)
 
@@ -129,7 +129,7 @@ class FichajeDAO {
         val connection = DBConnection.connect()
 
         try {
-            val query = "SELECT * FROM Fichajes WHERE Fecha = ? ORDER BY Hora_Entrada"
+            val query = """SELECT * FROM "Fichajes" WHERE "Fecha" = ? ORDER BY "Hora_Entrada""""
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, fecha)
 
@@ -168,9 +168,9 @@ class FichajeDAO {
         try {
             // Verificar si ya existe un fichaje sin salida para este empleado
             val checkQuery = """
-                SELECT ID_Fichaje FROM Fichajes 
-                WHERE DNI_Empleado = ? AND Fecha = ? AND Hora_Salida = ''
-            """
+            SELECT "ID_Fichaje" FROM "Fichajes" 
+            WHERE "DNI_Empleado" = ? AND "Fecha" = ? AND "Hora_Salida" = ''
+        """
             val checkStatement = connection.prepareStatement(checkQuery)
             checkStatement.setString(1, dniEmpleado)
             checkStatement.setString(2, currentDate)
@@ -185,39 +185,33 @@ class FichajeDAO {
             checkResult.close()
             checkStatement.close()
 
-            // Insertar nuevo fichaje
+            // Insertar nuevo fichaje y devolver el ID generado
             val query = """
-                INSERT INTO Fichajes (DNI_Empleado, Fecha, Hora_Entrada, Hora_Salida) 
-                VALUES (?, ?, ?, '')
-            """
+            INSERT INTO "Fichajes" ("DNI_Empleado", "Fecha", "Hora_Entrada", "Hora_Salida") 
+            VALUES (?, ?, ?, '') RETURNING "ID_Fichaje"
+        """
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, dniEmpleado)
             preparedStatement.setString(2, currentDate)
             preparedStatement.setString(3, currentTime)
 
-            val rowsAffected = preparedStatement.executeUpdate()
-            preparedStatement.close()
-
-            if (rowsAffected > 0) {
-                val statement = connection.createStatement()
-                val resultSet = statement.executeQuery("SELECT last_insert_rowid()")
-
-                if (resultSet.next()) {
-                    val id = resultSet.getInt(1)
-                    resultSet.close()
-                    statement.close()
-                    return id
-                }
-
+            val resultSet = preparedStatement.executeQuery()
+            if (resultSet.next()) {
+                val id = resultSet.getInt("ID_Fichaje")
                 resultSet.close()
-                statement.close()
+                preparedStatement.close()
+                return id
             }
+
+            resultSet.close()
+            preparedStatement.close()
         } catch (e: SQLException) {
             println("Error al registrar la entrada: ${e.message}")
         }
 
         return -1
     }
+
 
     /**
      * Registra la salida de un empleado
@@ -232,9 +226,9 @@ class FichajeDAO {
         try {
             // Buscar el fichaje sin salida para este empleado
             val query = """
-                UPDATE Fichajes 
-                SET Hora_Salida = ? 
-                WHERE DNI_Empleado = ? AND Fecha = ? AND Hora_Salida = ''
+                UPDATE "Fichajes" 
+                SET "Hora_Salida" = ? 
+                WHERE "DNI_Empleado" = ? AND "Fecha" = ? AND "Hora_Salida" = ''
             """
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, currentTime)
@@ -261,7 +255,7 @@ class FichajeDAO {
         val connection = DBConnection.connect()
 
         try {
-            val query = "DELETE FROM Fichajes WHERE ID_Fichaje = ?"
+            val query = """DELETE FROM "Fichajes" WHERE "ID_Fichaje" = ?"""
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setInt(1, id)
 
@@ -279,8 +273,8 @@ class FichajeDAO {
     fun getByEmpleadoAndDate(dni: String, fecha: String): Fichaje? {
         DBConnection.connect().use { conn ->
             val sql = """
-                SELECT * FROM Fichajes 
-                WHERE DNI_Empleado = ? AND Fecha = ?
+                SELECT * FROM "Fichajes" 
+                WHERE "DNI_Empleado" = ? AND "Fecha" = ?
                 LIMIT 1
             """
             conn.prepareStatement(sql).use { stmt ->
@@ -304,7 +298,7 @@ class FichajeDAO {
     fun insert(fichaje: Fichaje): Fichaje? {
         DBConnection.connect().use { conn ->
             val sql = """
-                INSERT INTO Fichajes (DNI_Empleado, Fecha, Hora_Entrada, Hora_Salida)
+                INSERT INTO "Fichajes" (DNI_Empleado, Fecha, Hora_Entrada, Hora_Salida)
                 VALUES (?, ?, ?, ?)
             """
             conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS).use { stmt ->
