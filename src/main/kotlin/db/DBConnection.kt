@@ -15,7 +15,7 @@ object DBConnection {
                     // Cargar el driver de PostgreSQL
                     Class.forName("org.postgresql.Driver")
                     connection = DriverManager.getConnection(DB_URL)
-                    println("Conexión a la base de datos establecida correctamente")
+                    println("Conexión a la base establecida correctamente")
 
                     connection?.autoCommit = true
                 } catch (e: ClassNotFoundException) {
