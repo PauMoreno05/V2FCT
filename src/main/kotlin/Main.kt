@@ -1,8 +1,5 @@
 import controller.EmpleadoController
 import controller.FichajeController
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.serialization.Serializable
 import view.LoginView
 import javax.swing.SwingUtilities
 import javax.swing.UIManager

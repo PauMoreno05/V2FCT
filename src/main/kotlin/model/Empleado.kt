@@ -10,5 +10,6 @@ data class Empleado(
     val correo: String,
     val idDepartamento: Int,
     val telefono: Int,
-    val contraseña: String
+    val contraseña: String,
+    val rol: String
 )

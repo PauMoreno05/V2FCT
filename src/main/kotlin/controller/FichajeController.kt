@@ -2,6 +2,7 @@ package controller
 
 import dao.FichajeDAO
 import dao.EmpleadoDAO
+import db.DBConnection
 import model.Fichaje
 import model.Empleado
 import java.text.SimpleDateFormat
@@ -163,6 +164,93 @@ class FichajeController {
             "diasTrabajados" to diasTrabajados,
             "fichajes" to fichajesFiltrados
         )
+    }
+
+    fun getFichajesPorEmpleadoYFecha(dniEmpleado: String, fecha: String): List<Fichaje> {
+        val fichajes = mutableListOf<Fichaje>()
+        val connection = DBConnection.connect()
+
+        try {
+            val sql = """
+            SELECT "ID_Fichaje", "DNI_Empleado", "Fecha", "Hora_Entrada", "Hora_Salida" 
+            FROM "Fichajes" 
+            WHERE "DNI_Empleado" = ? AND "Fecha" = ?
+            ORDER BY "Hora_Entrada"
+        """
+
+            val statement = connection.prepareStatement(sql)
+            statement.setString(1, dniEmpleado)
+            statement.setString(2, fecha)
+
+            val resultSet = statement.executeQuery()
+
+            while (resultSet.next()) {
+                val fichaje = Fichaje(
+                    id = resultSet.getInt("ID_Fichaje"),
+                    dniEmpleado = resultSet.getString("DNI_Empleado"),
+                    fecha = resultSet.getString("Fecha"),
+                    horaEntrada = resultSet.getString("Hora_Entrada"),
+                    horaSalida = resultSet.getString("Hora_Salida") ?: ""
+                )
+                fichajes.add(fichaje)
+            }
+
+            resultSet.close()
+            statement.close()
+        } catch (e: Exception) {
+            println("Error al obtener fichajes por empleado y fecha: ${e.message}")
+            e.printStackTrace()
+        } finally {
+            connection.close()
+        }
+
+        return fichajes
+    }
+
+    /**
+     * Obtiene todos los fichajes de un empleado en un rango de fechas
+     */
+    fun getFichajesPorEmpleadoYRangoFechas(dniEmpleado: String, fechaInicio: String, fechaFin: String): List<Fichaje> {
+        val fichajes = mutableListOf<Fichaje>()
+        val connection = DBConnection.connect()
+
+        try {
+            val sql = """
+            SELECT "ID_Fichaje", "DNI_Empleado", "Fecha", "Hora_Entrada", "Hora_Salida" 
+            FROM "Fichajes" 
+            WHERE "DNI_Empleado" = ? 
+            AND TO_DATE("Fecha", '%d/%m/%Y') BETWEEN TO_DATE(?, '%d/%m/%Y') AND TO_DATE(?, '%d/%m/%Y')
+            ORDER BY "Fecha", "Hora_Entrada"
+        """
+
+            val statement = connection.prepareStatement(sql)
+            statement.setString(1, dniEmpleado)
+            statement.setString(2, fechaInicio)
+            statement.setString(3, fechaFin)
+
+            val resultSet = statement.executeQuery()
+
+            while (resultSet.next()) {
+                val fichaje = Fichaje(
+                    id = resultSet.getInt("ID_Fichaje"),
+                    dniEmpleado = resultSet.getString("DNI_Empleado"),
+                    fecha = resultSet.getString("Fecha"),
+                    horaEntrada = resultSet.getString("Hora_Entrada"),
+                    horaSalida = resultSet.getString("Hora_Salida") ?: ""
+                )
+                fichajes.add(fichaje)
+            }
+
+            resultSet.close()
+            statement.close()
+        } catch (e: Exception) {
+            println("Error al obtener fichajes por rango de fechas: ${e.message}")
+            e.printStackTrace()
+        } finally {
+            connection.close()
+        }
+
+        return fichajes
     }
 }
 

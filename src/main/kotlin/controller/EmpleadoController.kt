@@ -55,7 +55,8 @@ class EmpleadoController {
         correo: String,
         idDepartamento: Int,
         telefono: Int,
-        contraseña: String
+        contraseña: String,
+        rol: String
     ): Boolean {
         // Validación básica de datos
         if (dni.isBlank() || nombre.isBlank() || apellido.isBlank() ||
@@ -81,7 +82,8 @@ class EmpleadoController {
             correo = correo,
             idDepartamento = idDepartamento,
             telefono = telefono,
-            contraseña = contraseña
+            contraseña = contraseña,
+            rol = rol
         )
 
         return empleadoDAO.insert(empleado)

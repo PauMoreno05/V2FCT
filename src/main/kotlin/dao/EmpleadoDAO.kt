@@ -29,7 +29,8 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado") ?: "",
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña") ?: ""
+                    contraseña = resultSet.getString("Contraseña") ?: "",
+                    rol = resultSet.getString("Rol") ?: ""
                 )
                 empleados.add(empleado)
             }
@@ -64,7 +65,8 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado"),
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña")
+                    contraseña = resultSet.getString("Contraseña"),
+                    rol = resultSet.getString("Rol")
                 )
             }
 
@@ -96,7 +98,8 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado"),
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña")
+                    contraseña = resultSet.getString("Contraseña"),
+                    rol = resultSet.getString("Rol")
                 )
                 empleados.add(empleado)
             }
@@ -129,7 +132,8 @@ class EmpleadoDAO {
                     correo = resultSet.getString("Correo_Empleado"),
                     idDepartamento = resultSet.getInt("ID_Departamento"),
                     telefono = resultSet.getInt("Telefono_Empleado"),
-                    contraseña = resultSet.getString("Contraseña")
+                    contraseña = resultSet.getString("Contraseña"),
+                    rol = resultSet.getString("Rol")
                 )
             }
 
@@ -149,8 +153,8 @@ class EmpleadoDAO {
             val query = """
                 INSERT INTO "Empleados" (
                     DNI_Empleado, Nombre_Empleado, Apellido_Empleado, 
-                    Correo_Empleado, ID_Departamento, Telefono_Empleado, Contraseña
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    Correo_Empleado, ID_Departamento, Telefono_Empleado, Contraseña, Rol
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, empleado.dni)
@@ -160,6 +164,7 @@ class EmpleadoDAO {
             preparedStatement.setInt(5, empleado.idDepartamento)
             preparedStatement.setInt(6, empleado.telefono)
             preparedStatement.setString(7, empleado.contraseña)
+            preparedStatement.setString(8, empleado.rol)
 
             val rowsAffected = preparedStatement.executeUpdate()
             preparedStatement.close()
@@ -183,7 +188,8 @@ class EmpleadoDAO {
                     Correo_Empleado = ?, 
                     ID_Departamento = ?, 
                     Telefono_Empleado = ?,
-                    Contraseña = ?
+                    Contraseña = ?,
+                    Rol = ? 
                 WHERE DNI_Empleado = ?
             """
             val preparedStatement = connection.prepareStatement(query)
@@ -194,6 +200,7 @@ class EmpleadoDAO {
             preparedStatement.setInt(5, empleado.telefono)
             preparedStatement.setString(6, empleado.contraseña)
             preparedStatement.setString(7, empleado.dni)
+            preparedStatement.setString(8, empleado.rol)
 
             val rowsAffected = preparedStatement.executeUpdate()
             preparedStatement.close()

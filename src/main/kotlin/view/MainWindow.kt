@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder
 
 /**
  * Ventana principal de la aplicación que contiene todas las vistas
+ * Ahora diferencia entre roles Root y empleados normales
  */
 class MainWindow(private val empleado: Empleado) : JFrame() {
 
@@ -18,9 +19,9 @@ class MainWindow(private val empleado: Empleado) : JFrame() {
     private val tabbedPane = JTabbedPane()
 
     init {
-        title = "Sistema de Fichajes - ${empleado.nombre} ${empleado.apellido}"
+        title = "Sistema de Fichajes - ${empleado.nombre} ${empleado.apellido} [${empleado.rol}]"
         defaultCloseOperation = EXIT_ON_CLOSE
-        setSize(800, 600)
+        setSize(if (empleado.rol.equals("Root", ignoreCase = true)) 900 else 800, 600)
         setLocationRelativeTo(null)
 
         // Configurar panel principal
@@ -32,10 +33,20 @@ class MainWindow(private val empleado: Empleado) : JFrame() {
         val logoLabel = JLabel("Sistema de Fichajes", JLabel.LEFT)
         logoLabel.font = Font(logoLabel.font.name, Font.BOLD, 18)
 
+        // Mostrar rol si es Root
+        val titlePanel = JPanel(FlowLayout(FlowLayout.LEFT))
+        titlePanel.add(logoLabel)
+        if (empleado.rol.equals("Root", ignoreCase = true)) {
+            val rolLabel = JLabel("[ADMINISTRADOR]")
+            rolLabel.font = Font(rolLabel.font.name, Font.BOLD, 12)
+            rolLabel.foreground = Color.RED
+            titlePanel.add(rolLabel)
+        }
+
         val logoutButton = JButton("Cerrar Sesión")
         logoutButton.addActionListener { cerrarSesion() }
 
-        headerPanel.add(logoLabel, BorderLayout.WEST)
+        headerPanel.add(titlePanel, BorderLayout.WEST)
         headerPanel.add(logoutButton, BorderLayout.EAST)
         headerPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY)
         headerPanel.add(Box.createVerticalStrut(30), BorderLayout.SOUTH)
@@ -43,8 +54,12 @@ class MainWindow(private val empleado: Empleado) : JFrame() {
         // Configurar pestañas
         tabbedPane.addTab("Fichajes", JPanel(BorderLayout()).apply { add(fichajeView, BorderLayout.CENTER) })
 
-        // Si el empleado pertenece a RRHH (asumimos idDepartamento = 1 para RRHH)
-        if (empleado.idDepartamento == 1) {
+        // Agregar pestaña de calendario para todos los usuarios
+        val calendarioView = CalendarioView(empleado, fichajeController)
+        tabbedPane.addTab("📅 Calendario", JPanel(BorderLayout()).apply { add(calendarioView, BorderLayout.CENTER) })
+
+        // Si el empleado tiene rol Root, mostrar panel de administración
+        if (empleado.rol.equals("Root", ignoreCase = true)) {
             tabbedPane.addTab("Administración", crearPanelAdmin())
         }
 
@@ -64,83 +79,68 @@ class MainWindow(private val empleado: Empleado) : JFrame() {
         val adminTabs = JTabbedPane()
 
         // Pestaña de gestión de empleados
-        adminTabs.addTab("Empleados", crearPanelEmpleados())
+        //adminTabs.addTab("Empleados", crearPanelEmpleados())
 
         // Pestaña de informes de fichajes
-        adminTabs.addTab("Informes", crearPanelInformes())
+        //adminTabs.addTab("Informes", crearPanelInformes())
+
+        // Pestaña adicional para Root: Gestión de roles
+        adminTabs.addTab("Gestión Roles", crearPanelGestionRoles())
 
         panel.add(adminTabs, BorderLayout.CENTER)
         return panel
     }
 
-    private fun crearPanelEmpleados(): JPanel {
+    private fun crearPanelGestionRoles(): JPanel {
         val panel = JPanel(BorderLayout(10, 10))
         panel.border = EmptyBorder(10, 10, 10, 10)
 
-        // Implementación básica, podría expandirse en una clase separada
-        val tableModel = DefaultListModel<String>()
-        val listaEmpleados = JList(tableModel)
+        // Panel superior con información
+        val infoPanel = JPanel()
+        val infoLabel = JLabel("Gestión de Roles de Usuario")
+        infoLabel.font = Font(infoLabel.font.name, Font.BOLD, 14)
+        infoPanel.add(infoLabel)
 
-        // Botones de acción
-        val buttonPanel = JPanel(FlowLayout(FlowLayout.LEFT))
-        buttonPanel.add(JButton("Nuevo").apply {
-            addActionListener { JOptionPane.showMessageDialog(this@MainWindow, "Funcionalidad no implementada") }
-        })
-        buttonPanel.add(JButton("Editar").apply {
-            addActionListener { JOptionPane.showMessageDialog(this@MainWindow, "Funcionalidad no implementada") }
-        })
-        buttonPanel.add(JButton("Eliminar").apply {
-            addActionListener { JOptionPane.showMessageDialog(this@MainWindow, "Funcionalidad no implementada") }
-        })
+        // Panel central con lista de empleados y sus roles
+        val empleadosRolesModel = DefaultListModel<String>()
+        val listaEmpleadosRoles = JList(empleadosRolesModel)
 
-        // Cargar empleados
+        // Cargar empleados con sus roles
         val empleados = empleadoController.getAllEmpleados()
         for (emp in empleados) {
-            tableModel.addElement("${emp.dni} - ${emp.nombre} ${emp.apellido}")
+            empleadosRolesModel.addElement("${emp.dni} - ${emp.nombre} ${emp.apellido} - Rol: ${emp.rol}")
         }
 
-        panel.add(JScrollPane(listaEmpleados), BorderLayout.CENTER)
-        panel.add(buttonPanel, BorderLayout.SOUTH)
+        // Panel de botones para cambiar roles
+        val buttonPanel = JPanel(FlowLayout())
+        val btnCambiarRol = JButton("Cambiar Rol")
+        btnCambiarRol.addActionListener {
+            val selectedIndex = listaEmpleadosRoles.selectedIndex
+            if (selectedIndex != -1) {
+                val roles = arrayOf("Root", "Empleado", "Supervisor")
+                val nuevoRol = JOptionPane.showInputDialog(
+                    this@MainWindow,
+                    "Seleccione el nuevo rol:",
+                    "Cambiar Rol",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    roles,
+                    roles[1]
+                ) as String?
 
-        return panel
-    }
-
-    private fun crearPanelInformes(): JPanel {
-        val panel = JPanel(BorderLayout(10, 10))
-        panel.border = EmptyBorder(10, 10, 10, 10)
-
-        // Panel de filtros
-        val filtrosPanel = JPanel(GridLayout(3, 2, 10, 10))
-        filtrosPanel.add(JLabel("Fecha inicio:"))
-        filtrosPanel.add(JTextField())
-        filtrosPanel.add(JLabel("Fecha fin:"))
-        filtrosPanel.add(JTextField())
-        filtrosPanel.add(JLabel("Empleado:"))
-        filtrosPanel.add(JComboBox<String>().apply {
-            addItem("Todos")
-            val empleados = empleadoController.getAllEmpleados()
-            for (emp in empleados) {
-                addItem("${emp.nombre} ${emp.apellido}")
+                if (nuevoRol != null) {
+                    JOptionPane.showMessageDialog(this@MainWindow, "Rol cambiado a: $nuevoRol\n(Funcionalidad no implementada)")
+                    // Aquí iría la lógica para actualizar el rol en la BD
+                }
+            } else {
+                JOptionPane.showMessageDialog(this@MainWindow, "Seleccione un empleado")
             }
-        })
-
-        // Botón de generar informe
-        val btnGenerar = JButton("Generar Informe")
-        btnGenerar.addActionListener {
-            JOptionPane.showMessageDialog(this, "Funcionalidad no implementada")
         }
+        buttonPanel.add(btnCambiarRol)
 
-        // Área de resultados
-        val resultadosArea = JTextArea()
-        resultadosArea.isEditable = false
-
-        // Composición del panel
-        val topPanel = JPanel(BorderLayout())
-        topPanel.add(filtrosPanel, BorderLayout.CENTER)
-        topPanel.add(btnGenerar, BorderLayout.SOUTH)
-
-        panel.add(topPanel, BorderLayout.NORTH)
-        panel.add(JScrollPane(resultadosArea), BorderLayout.CENTER)
+        panel.add(infoPanel, BorderLayout.NORTH)
+        panel.add(JScrollPane(listaEmpleadosRoles), BorderLayout.CENTER)
+        panel.add(buttonPanel, BorderLayout.SOUTH)
 
         return panel
     }
