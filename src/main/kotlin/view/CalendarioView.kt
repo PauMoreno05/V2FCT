@@ -24,6 +24,7 @@ class CalendarioView(
 ) : JPanel() {
 
     private var fechaActual = LocalDate.now()
+    private var fechaSeleccionada = LocalDate.now() // Nueva variable para tracking del día seleccionado
     private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     private val dbDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -38,6 +39,7 @@ class CalendarioView(
     // Colores para el calendario
     private val colorDiaConFichajes = Color(144, 238, 144) // Verde claro
     private val colorDiaSeleccionado = Color(173, 216, 230) // Azul claro
+    private val colorDiaHoy = Color(255, 215, 0) // Amarillo dorado para el día actual
     private val colorDiaSinFichajes = Color.WHITE
     private val colorDiaOtroMes = Color.LIGHT_GRAY
 
@@ -47,7 +49,7 @@ class CalendarioView(
 
         crearInterfaz()
         actualizarCalendario()
-        mostrarDetallesFecha(fechaActual)
+        mostrarDetallesFecha(fechaSeleccionada)
     }
 
     private fun crearInterfaz() {
@@ -115,6 +117,8 @@ class CalendarioView(
         panel.add(crearIndicadorColor("Con fichajes", colorDiaConFichajes))
         panel.add(Box.createHorizontalStrut(10))
         panel.add(crearIndicadorColor("Sin fichajes", colorDiaSinFichajes))
+        panel.add(Box.createHorizontalStrut(10))
+        panel.add(crearIndicadorColor("Hoy", colorDiaHoy))
         panel.add(Box.createHorizontalStrut(10))
         panel.add(crearIndicadorColor("Seleccionado", colorDiaSeleccionado))
 
@@ -207,38 +211,79 @@ class CalendarioView(
         btn.preferredSize = Dimension(50, 40)
         btn.font = Font(btn.font.name, Font.PLAIN, 10)
 
-        // Determinar color de fondo
+        // Determinar color de fondo basado en prioridades
         val tieneFichajes = fichajesDelMes.any { fichaje ->
-            parsearFecha(fichaje.fecha) == fecha
+            val fechaParsed = parsearFecha(fichaje.fecha)
+            fechaParsed == fecha
         }
 
         val mesActual = YearMonth.from(fechaActual)
         val mesFecha = YearMonth.from(fecha)
+        val esHoy = fecha == LocalDate.now()
+        val esSeleccionado = fecha == fechaSeleccionada
 
         when {
-            fecha == LocalDate.now() -> {
-                btn.background = colorDiaSeleccionado
-                btn.font = Font(btn.font.name, Font.BOLD, 11)
-            }
             mesFecha != mesActual -> {
                 btn.background = colorDiaOtroMes
                 btn.isEnabled = false
             }
-            tieneFichajes -> btn.background = colorDiaConFichajes
-            else -> btn.background = colorDiaSinFichajes
+            esSeleccionado -> {
+                btn.background = colorDiaSeleccionado
+                btn.font = Font(btn.font.name, Font.BOLD, 11)
+                btn.border = BorderFactory.createLineBorder(Color.BLUE, 2)
+            }
+            esHoy -> {
+                btn.background = colorDiaHoy
+                btn.font = Font(btn.font.name, Font.BOLD, 11)
+                btn.border = BorderFactory.createLineBorder(Color.ORANGE, 2)
+            }
+            tieneFichajes -> {
+                btn.background = colorDiaConFichajes
+            }
+            else -> {
+                btn.background = colorDiaSinFichajes
+            }
         }
 
-        btn.addActionListener { mostrarDetallesFecha(fecha) }
+        // Agregar listener para seleccionar fecha
+        btn.addActionListener {
+            seleccionarFecha(fecha)
+        }
+
         return btn
+    }
+
+    private fun seleccionarFecha(fecha: LocalDate) {
+        // Solo permitir seleccionar fechas del mes actual
+        val mesActual = YearMonth.from(fechaActual)
+        val mesFecha = YearMonth.from(fecha)
+
+        if (mesFecha == mesActual) {
+            fechaSeleccionada = fecha
+            actualizarCalendario() // Refrescar calendario para mostrar nueva selección
+            mostrarDetallesFecha(fecha)
+        }
     }
 
     private fun obtenerFichajesDelMes(fecha: LocalDate): List<Fichaje> {
         val primerDia = fecha.withDayOfMonth(1).format(dateFormatter)
         val ultimoDia = fecha.withDayOfMonth(fecha.lengthOfMonth()).format(dateFormatter)
 
-        return fichajeController.getFichajesPorEmpleadoYRangoFechas(
+        var fichajes = fichajeController.getFichajesPorEmpleadoYRangoFechas(
             empleado.dni, primerDia, ultimoDia
         )
+
+        // Si no encuentra fichajes con formato dd/MM/yyyy, intentar con yyyy-MM-dd
+        if (fichajes.isEmpty()) {
+            val primerDiaDb = fecha.withDayOfMonth(1).format(dbDateFormatter)
+            val ultimoDiaDb = fecha.withDayOfMonth(fecha.lengthOfMonth()).format(dbDateFormatter)
+
+            fichajes = fichajeController.getFichajesPorEmpleadoYRangoFechas(
+                empleado.dni, primerDiaDb, ultimoDiaDb
+            )
+        }
+
+        return fichajes
     }
 
     private fun parsearFecha(fechaStr: String): LocalDate? {
@@ -254,8 +299,20 @@ class CalendarioView(
                     // Si también falla, intentar con formato ISO estándar
                     LocalDate.parse(fechaStr)
                 } catch (e3: Exception) {
-                    println("Error al parsear fecha: $fechaStr")
-                    null
+                    try {
+                        // Intentar con formato dd-MM-yyyy (guiones)
+                        val dashFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                        LocalDate.parse(fechaStr, dashFormatter)
+                    } catch (e4: Exception) {
+                        try {
+                            // Intentar con formato MM/dd/yyyy (formato americano)
+                            val usFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                            LocalDate.parse(fechaStr, usFormatter)
+                        } catch (e5: Exception) {
+                            println("Error al parsear fecha: $fechaStr - Formatos intentados: dd/MM/yyyy, yyyy-MM-dd, ISO, dd-MM-yyyy, MM/dd/yyyy")
+                            null
+                        }
+                    }
                 }
             }
         }
@@ -263,36 +320,76 @@ class CalendarioView(
 
     private fun mostrarDetallesFecha(fecha: LocalDate) {
         val fechaStr = fecha.format(dateFormatter)
-        val fichajes = fichajeController.getFichajesPorEmpleadoYFecha(empleado.dni, fechaStr)
+
+        // Debug: Intentar múltiples formatos de fecha
+        var fichajes = fichajeController.getFichajesPorEmpleadoYFecha(empleado.dni, fechaStr)
+
+        // Si no encuentra fichajes con formato dd/MM/yyyy, intentar con yyyy-MM-dd
+        if (fichajes.isEmpty()) {
+            val fechaDbFormat = fecha.format(dbDateFormatter)
+            fichajes = fichajeController.getFichajesPorEmpleadoYFecha(empleado.dni, fechaDbFormat)
+        }
+
+        // Si aún no encuentra, intentar con formato ISO
+        if (fichajes.isEmpty()) {
+            val fechaIsoFormat = fecha.toString()
+            fichajes = fichajeController.getFichajesPorEmpleadoYFecha(empleado.dni, fechaIsoFormat)
+        }
 
         if (fichajes.isEmpty()) {
             labelResumen.text = "📅 ${fechaStr} - Sin fichajes registrados"
-            textAreaDetalles.text = "No hay fichajes registrados para esta fecha."
+            textAreaDetalles.text = """
+                Sin fichajes registrados para esta fecha.
+                
+                ${if (fecha == LocalDate.now()) "🔔 Es el día de hoy" else ""}
+                ${if (fecha.dayOfWeek.value >= 6) "🎉 Es fin de semana" else ""}
+            """.trimIndent()
             return
         }
 
         // Calcular resumen
         val totalHoras = calcularTotalHoras(fichajes)
-        labelResumen.text = "📅 ${fechaStr} - Total: ${formatearDuracion(totalHoras)}"
+        val estadoFichaje = if (fichajes.any { it.horaSalida.isEmpty() }) " (En curso)" else ""
+        labelResumen.text = "📅 ${fechaStr} - Total: ${formatearDuracion(totalHoras)}$estadoFichaje"
 
-        // Mostrar detalles
+        // Mostrar detalles mejorados
         val sb = StringBuilder()
         sb.append("FICHAJES DEL DÍA\n")
         sb.append("=".repeat(40)).append("\n\n")
 
-        fichajes.sortedBy { it.horaEntrada }.forEach { fichaje ->
+        fichajes.sortedBy { it.horaEntrada }.forEachIndexed { index, fichaje ->
+            sb.append("📍 FICHAJE ${index + 1}\n")
             sb.append("⏰ Entrada: ${fichaje.horaEntrada}\n")
             if (fichaje.horaSalida.isNotEmpty()) {
                 sb.append("⏰ Salida:  ${fichaje.horaSalida}\n")
                 val duracion = calcularDuracionFichaje(fichaje)
                 sb.append("⌛ Duración: ${formatearDuracion(duracion)}\n")
             } else {
-                sb.append("⏰ Salida:  -- (En curso)\n")
+                sb.append("⏰ Salida:  -- (🔴 En curso)\n")
+                sb.append("⌛ Tiempo actual: ${calcularTiempoTranscurrido(fichaje.horaEntrada)}\n")
             }
             sb.append("-".repeat(25)).append("\n")
         }
 
+        // Agregar información adicional
+        if (fichajes.size > 1) {
+            sb.append("\n📊 RESUMEN:\n")
+            sb.append("   • Número de fichajes: ${fichajes.size}\n")
+            sb.append("   • Tiempo total trabajado: ${formatearDuracion(totalHoras)}\n")
+        }
+
         textAreaDetalles.text = sb.toString()
+    }
+
+    private fun calcularTiempoTranscurrido(horaEntrada: String): String {
+        return try {
+            val ahora = java.time.LocalTime.now()
+            val entrada = java.time.LocalTime.parse(horaEntrada)
+            val duracion = java.time.Duration.between(entrada, ahora)
+            formatearDuracion(duracion.toMinutes().toInt())
+        } catch (e: Exception) {
+            "N/A"
+        }
     }
 
     private fun calcularTotalHoras(fichajes: List<Fichaje>): Int {
@@ -323,17 +420,27 @@ class CalendarioView(
 
     private fun cambiarMes(incremento: Int) {
         fechaActual = fechaActual.plusMonths(incremento.toLong())
+        // Mantener la fecha seleccionada si está en el nuevo mes
+        val mesNuevo = YearMonth.from(fechaActual)
+        val mesSeleccionado = YearMonth.from(fechaSeleccionada)
+
+        if (mesNuevo != mesSeleccionado) {
+            fechaSeleccionada = fechaActual
+        }
+
         actualizarCalendario()
+        mostrarDetallesFecha(fechaSeleccionada)
     }
 
     private fun irAHoy() {
         fechaActual = LocalDate.now()
+        fechaSeleccionada = LocalDate.now()
         actualizarCalendario()
-        mostrarDetallesFecha(fechaActual)
+        mostrarDetallesFecha(fechaSeleccionada)
     }
 
     private fun generarInformeSemanal() {
-        val inicioSemana = fechaActual.minusDays((fechaActual.dayOfWeek.value - 1).toLong())
+        val inicioSemana = fechaSeleccionada.minusDays((fechaSeleccionada.dayOfWeek.value - 1).toLong())
         val finSemana = inicioSemana.plusDays(6)
 
         val fichajes = fichajeController.getFichajesPorEmpleadoYRangoFechas(
