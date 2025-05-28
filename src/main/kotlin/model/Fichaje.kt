@@ -9,5 +9,5 @@ data class Fichaje(
     val fecha: String,
     val horaEntrada: String,
     val horaSalida: String = "",  // Puede estar vacío si aún no se ha registrado la salida
-    val ubicacion: String = ""
+    val ubicacion: String? = null
 )

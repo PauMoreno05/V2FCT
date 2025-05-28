@@ -195,7 +195,7 @@ class FichajeDAO {
             // Insertar nuevo fichaje y devolver el ID generado
             val query = """
             INSERT INTO "Fichajes" ("DNI_Empleado", "Fecha", "Hora_Entrada", "Hora_Salida", "Ubicacion") 
-            VALUES (?, ?, ?, '') RETURNING "ID_Fichaje"
+            VALUES (?, ?, ?, '','') RETURNING "ID_Fichaje"
         """
             val preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, dniEmpleado)
@@ -310,7 +310,7 @@ class FichajeDAO {
         DBConnection.connect().use { conn ->
             val sql = """
                 INSERT INTO "Fichajes" (DNI_Empleado, Fecha, Hora_Entrada, Hora_Salida, Ubicacion)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
             """
             conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS).use { stmt ->
                 stmt.setString(1, fichaje.dniEmpleado)
