@@ -8,5 +8,6 @@ data class Fichaje(
     val dniEmpleado: String,
     val fecha: String,
     val horaEntrada: String,
-    val horaSalida: String = ""  // Puede estar vacío si aún no se ha registrado la salida
+    val horaSalida: String = "",  // Puede estar vacío si aún no se ha registrado la salida
+    val ubicacion: String = ""
 )

@@ -35,7 +35,8 @@ class FichajeDAO {
                     dniEmpleado = resultSet.getString("DNI_Empleado"),
                     fecha = resultSet.getString("Fecha"),
                     horaEntrada = resultSet.getString("Hora_Entrada"),
-                    horaSalida = resultSet.getString("Hora_Salida")
+                    horaSalida = resultSet.getString("Hora_Salida"),
+                    ubicacion = resultSet.getString("Ubicacion")
                 )
                 fichajes.add(fichaje)
             }
@@ -70,7 +71,8 @@ class FichajeDAO {
                     dniEmpleado = resultSet.getString("DNI_Empleado"),
                     fecha = resultSet.getString("Fecha"),
                     horaEntrada = resultSet.getString("Hora_Entrada"),
-                    horaSalida = resultSet.getString("Hora_Salida")
+                    horaSalida = resultSet.getString("Hora_Salida"),
+                    ubicacion = resultSet.getString("Ubicacion")
                 )
             }
 
@@ -105,7 +107,8 @@ class FichajeDAO {
                     dniEmpleado = resultSet.getString("DNI_Empleado"),
                     fecha = resultSet.getString("Fecha"),
                     horaEntrada = resultSet.getString("Hora_Entrada"),
-                    horaSalida = resultSet.getString("Hora_Salida")
+                    horaSalida = resultSet.getString("Hora_Salida"),
+                    ubicacion = resultSet.getString("Ubicacion")
                 )
                 fichajes.add(fichaje)
             }
@@ -141,7 +144,8 @@ class FichajeDAO {
                     dniEmpleado = resultSet.getString("DNI_Empleado"),
                     fecha = resultSet.getString("Fecha"),
                     horaEntrada = resultSet.getString("Hora_Entrada"),
-                    horaSalida = resultSet.getString("Hora_Salida")
+                    horaSalida = resultSet.getString("Hora_Salida"),
+                    ubicacion = resultSet.getString("Ubicacion")
                 )
                 fichajes.add(fichaje)
             }
@@ -190,7 +194,7 @@ class FichajeDAO {
 
             // Insertar nuevo fichaje y devolver el ID generado
             val query = """
-            INSERT INTO "Fichajes" ("DNI_Empleado", "Fecha", "Hora_Entrada", "Hora_Salida") 
+            INSERT INTO "Fichajes" ("DNI_Empleado", "Fecha", "Hora_Entrada", "Hora_Salida", "Ubicacion") 
             VALUES (?, ?, ?, '') RETURNING "ID_Fichaje"
         """
             val preparedStatement = connection.prepareStatement(query)
@@ -293,7 +297,8 @@ class FichajeDAO {
                             dniEmpleado = rs.getString("DNI_Empleado"),
                             fecha = rs.getString("Fecha"),
                             horaEntrada = rs.getString("Hora_Entrada"),
-                            horaSalida = rs.getString("Hora_Salida") ?: ""
+                            horaSalida = rs.getString("Hora_Salida") ?: "",
+                            ubicacion = rs.getString("Ubicacion")
                         )
                     } else null
                 }
@@ -304,7 +309,7 @@ class FichajeDAO {
     fun insert(fichaje: Fichaje): Fichaje? {
         DBConnection.connect().use { conn ->
             val sql = """
-                INSERT INTO "Fichajes" (DNI_Empleado, Fecha, Hora_Entrada, Hora_Salida)
+                INSERT INTO "Fichajes" (DNI_Empleado, Fecha, Hora_Entrada, Hora_Salida, Ubicacion)
                 VALUES (?, ?, ?, ?)
             """
             conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS).use { stmt ->
@@ -312,6 +317,7 @@ class FichajeDAO {
                 stmt.setString(2, fichaje.fecha)
                 stmt.setString(3, fichaje.horaEntrada)
                 stmt.setString(4, fichaje.horaSalida)
+                stmt.setString(4, fichaje.ubicacion)
 
                 stmt.executeUpdate()
 
@@ -336,7 +342,8 @@ class FichajeDAO {
                         DNI_Empleado = ?,
                         Fecha = ?,
                         Hora_Entrada = ?,
-                        Hora_Salida = ?
+                        Hora_Salida = ?,
+                        Ubicacion = ?
                     WHERE ID_Fichaje = ?
                 """
                 conn.prepareStatement(query).use { stmt ->
@@ -344,6 +351,7 @@ class FichajeDAO {
                     stmt.setString(2, fichaje.fecha)
                     stmt.setString(3, fichaje.horaEntrada)
                     stmt.setString(4, fichaje.horaSalida)
+                    stmt.setString(4, fichaje.ubicacion)
                     stmt.setInt(5, fichaje.id)
 
                     stmt.executeUpdate()
@@ -365,7 +373,8 @@ class FichajeDAO {
                         DNI_Empleado = ?,
                         Fecha = ?,
                         Hora_Entrada = ?,
-                        Hora_Salida = ?
+                        Hora_Salida = ?,
+                        Ubicacion = ?
                     WHERE ID_Fichaje = ?
                 """
                 conn.prepareStatement(query).use { stmt ->
@@ -373,6 +382,7 @@ class FichajeDAO {
                     stmt.setString(2, fichaje.fecha)
                     stmt.setString(3, fichaje.horaEntrada)
                     stmt.setString(4, fichaje.horaSalida)
+                    stmt.setString(4, fichaje.ubicacion)
                     stmt.setInt(5, fichaje.id)
 
                     val rowsAffected = stmt.executeUpdate()
